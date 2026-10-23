@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wayfare VPN (demo)</title>
+<style>
+:root{--bg:#EAEFF1;--surface:#fff;--ink:#14232B;--muted:#586972;--line:#D3DCE0;--accent:#0E7C86;--accent-ink:#fff;--warn-bg:#FBF0D9;--warn-ink:#6B4A06;--ring:#CBD6DB;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A20;--surface:#17252D;--ink:#E7EEF1;--muted:#9BAEB8;--line:#2A3B45;--accent:#4FC3CE;--accent-ink:#06242A;--warn-bg:#3A2D0E;--warn-ink:#F2D58E;--ring:#2A3B45;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A20;--surface:#17252D;--ink:#E7EEF1;--muted:#9BAEB8;--line:#2A3B45;--accent:#4FC3CE;--accent-ink:#06242A;--warn-bg:#3A2D0E;--warn-ink:#F2D58E;--ring:#2A3B45;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+main{flex:1;overflow-y:auto;width:100%;max-width:480px;margin:0 auto;padding:20px}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:18px;margin:28px 0 8px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}
+.banner{background:var(--warn-bg);color:var(--warn-ink);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:500;margin-bottom:20px}
+.ring{position:relative;width:240px;height:240px;margin:12px auto 20px}
+.ring svg{width:100%;height:100%;overflow:visible}
+.ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring .bg{stroke:var(--ring)}
+.ring .fg{stroke:var(--accent);stroke-dasharray:654;stroke-dashoffset:654;transform:rotate(-90deg);transform-origin:center;transform-box:fill-box;transition:stroke-dashoffset .8s ease,stroke-dasharray .8s ease}
+.ring[data-s="connecting"] .fg{stroke-dasharray:170 484;stroke-dashoffset:0;animation:spin 1.2s linear infinite}
+.ring[data-s="on"] .fg{stroke-dashoffset:0}
+@keyframes spin{to{transform:rotate(270deg)}}
+@media (prefers-reduced-motion:reduce){.ring .fg{animation:none!important;transition:none}}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.time{font-size:44px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mid small{color:var(--muted);font-size:14px}
+.center{text-align:center}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.primary{width:100%;border:0;border-radius:14px;padding:16px;font-weight:600;font-size:17px;background:var(--accent);color:var(--accent-ink)}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.primary.stop{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--ink);margin-bottom:10px}
+.row b{display:block;font-weight:600}
+.row span{font-size:14px;color:var(--muted)}
+.row[aria-pressed="true"]{border:2px solid var(--accent);padding:13px 15px}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{flex:1;border:0;background:none;padding:10px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.decl{list-style:none;padding:0;margin:0}
+.decl li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.decl b{display:block;margin-bottom:2px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.sw input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+nav{display:flex;border-top:1px solid var(--line);background:var(--surface)}
+nav button{flex:1;border:0;background:none;padding:14px 0;color:var(--muted);font-weight:500;border-top:3px solid transparent;margin-top:-1px}
+nav button[aria-current="page"]{color:var(--ink);border-top-color:var(--accent)}
+.gate{position:fixed;inset:0;background:rgba(10,20,25,.6);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.gate[hidden]{display:none}
+.sheet{background:var(--surface);width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.chk{display:flex;gap:12px;align-items:flex-start;margin:16px 0}
+.chk input{width:22px;height:22px;accent-color:var(--accent);flex:none;margin-top:2px}
+.link{background:none;border:0;color:var(--accent);padding:0;text-decoration:underline;font-weight:500}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav aria-label="Main">
+  <button data-tab="home">Connect</button>
+  <button data-tab="locs">Locations</button>
+  <button data-tab="decl">Declaration</button>
+</nav>
+
+<div class="gate" id="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gt">
+  <div class="sheet">
+    <h1 id="gt">Before you start</h1>
+    <p>Wayfare is a prototype of a VPN app’s interface. It doesn’t connect to any VPN servers, so it can’t hide your IP address or encrypt your traffic.</p>
+    <label class="chk"><input type="checkbox" id="ack"><span>I understand that nothing is protected while I use this demo.</span></label>
+    <button class="primary" id="go" disabled>Continue</button>
+  </div>
+</div>
+
+<script>
+var LOCS=[["Reykjavík","Iceland",38],["Zürich","Switzerland",24],["Amsterdam","Netherlands",19],["Toronto","Canada",52],["Singapore","Singapore",71],["São Paulo","Brazil",64]];
+var S={tab:"home",s:"off",loc:1,t0:0,ack:false,theme:"auto",kill:true,auto:false};
+try{var v=JSON.parse(localStorage.getItem("wf")||"{}");for(var k in v){if(k in S&&k!=="s"&&k!=="tab")S[k]=v[k];}}catch(e){}
+function save(){try{localStorage.setItem("wf",JSON.stringify({ack:S.ack,loc:S.loc,theme:S.theme,kill:S.kill,auto:S.auto}))}catch(e){}}
+function applyTheme(){var r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme)}
+function fmt(ms){var t=Math.floor(ms/1000),m=Math.floor(t/60),s=t%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
+var HEAD={off:["Not connected","Your connection is unchanged."],connecting:["Starting demo session…","Simulating a handshake. Nothing is being sent."],on:["Demo session active","Nothing is encrypted or rerouted."]};
+
+function view(){
+  var a=document.getElementById("app"),L=LOCS[S.loc],h="";
+  if(S.tab==="home"){
+    var st=S.s;
+    h+='<div class="banner" role="note">Demo only. Your traffic isn’t protected, even when a session is active.</div>';
+    h+='<div class="ring" data-s="'+st+'"><svg viewBox="0 0 240 240" aria-hidden="true"><circle class="bg" cx="120" cy="120" r="104"/><circle class="fg" cx="120" cy="120" r="104"/></svg><div class="mid"><div class="time" id="tm">'+(st==="on"?fmt(Date.now()-S.t0):"--:--")+'</div><small>'+(st==="on"?"session time":"no session")+'</small></div></div>';
+    h+='<div class="center"><h1>'+HEAD[st][0]+'</h1><p class="muted">'+HEAD[st][1]+'</p></div>';
+    h+='<button class="row" data-go="locs" style="margin-top:16px"><div><b>'+L[0]+'</b><span>'+L[1]+' · placeholder server</span></div><span>Change</span></button>';
+    h+='<button class="primary'+(st==="on"?" stop":"")+'" id="cta"'+(st==="connecting"?" disabled":"")+'>'+(st==="on"?"End demo session":st==="connecting"?"Starting…":"Start demo session")+'</button>';
+  }
+  if(S.tab==="locs"){
+    h+='<h1>Locations</h1><p class="muted">Placeholder servers. Ping times are made up.</p>';
+    LOCS.forEach(function(l,i){h+='<button class="row" data-loc="'+i+'" aria-pressed="'+(i===S.loc)+'"><div><b>'+l[0]+'</b><span>'+l[1]+'</span></div><span>'+l[2]+' ms (simulated)</span></button>'});
+  }
+  if(S.tab==="decl"){
+    h+='<h1>Declaration</h1><p class="muted">What this app is, and what it isn’t.</p><ul class="decl">'
+    +'<li><b>It’s an interface, not a tunnel.</b>Starting a session only changes what this screen shows. Your real IP address, location and traffic stay exactly as they were.</li>'
+    +'<li><b>The servers are placeholders.</b>City names and ping times are invented for the demo.</li>'
+    +'<li><b>No privacy or speed claims.</b>There’s no no‑logs policy, encryption or speed promise, because no network service sits behind this app.</li>'
+    +'<li><b>Nothing leaves your device.</b>No accounts, analytics or network requests. Your choices are saved only in this browser.</li>'
+    +'<li><b>For real protection, choose carefully.</b>Pick a provider that publishes independent audits, and read its policy before you pay.</li></ul>'
+    +'<h2>Settings</h2><div class="seg" role="group" aria-label="Theme">'
+    +["auto","light","dark"].map(function(t){return '<button data-theme="'+t+'" aria-pressed="'+(S.theme===t)+'">'+t[0].toUpperCase()+t.slice(1)+'</button>'}).join("")+'</div>'
+    +'<label class="sw"><span><b>Kill switch (demo)</b><span class="muted">Would block traffic if a tunnel dropped. Does nothing here.</span></span><input type="checkbox" data-opt="kill"'+(S.kill?" checked":"")+'></label>'
+    +'<label class="sw"><span><b>Auto-connect on public Wi‑Fi (demo)</b><span class="muted">Does nothing here.</span></span><input type="checkbox" data-opt="auto"'+(S.auto?" checked":"")+'></label>'
+    +'<p style="margin-top:16px"><button class="link" id="clr">Clear saved settings</button></p>';
+  }
+  a.innerHTML=h;
+  document.querySelectorAll("nav button").forEach(function(b){if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+}
+function start(){
+  if(!S.ack){document.getElementById("gate").hidden=false;return}
+  S.s="connecting";view();
+  setTimeout(function(){S.s="on";S.t0=Date.now();view()},1500);
+}
+document.addEventListener("click",function(e){
+  var t=e.target.closest("button");if(!t)return;
+  if(t.dataset.tab){S.tab=t.dataset.tab;view();return}
+  if(t.dataset.go){S.tab=t.dataset.go;view();return}
+  if(t.id==="cta"){if(S.s==="on"){S.s="off";view()}else if(S.s==="off")start();return}
+  if(t.dataset.loc!==undefined){S.loc=+t.dataset.loc;save();var was=S.s==="on";S.tab="home";if(was)start();else view();return}
+  if(t.dataset.theme){S.theme=t.dataset.theme;save();applyTheme();view();return}
+  if(t.id==="clr"){try{localStorage.removeItem("wf")}catch(x){}S.ack=false;S.loc=1;S.theme="auto";S.kill=true;S.auto=false;applyTheme();view();return}
+});
+document.addEventListener("change",function(e){
+  var t=e.target;
+  if(t.id==="ack"){document.getElementById("go").disabled=!t.checked}
+  if(t.dataset.opt){S[t.dataset.opt]=t.checked;save()}
+});
+document.getElementById("go").addEventListener("click",function(){
+  S.ack=true;save();document.getElementById("gate").hidden=true;document.getElementById("ack").checked=false;this.disabled=true;start();
+});
+setInterval(function(){var el=document.getElementById("tm");if(el&&S.s==="on")el.textContent=fmt(Date.now()-S.t0)},1000);
+applyTheme();view();
+</script>
+</body>
+</html>
